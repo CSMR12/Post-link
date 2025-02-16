@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Dashboard - Login</title>
+    <style>
+        /* General Styles */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f3f2ef;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        /* Container */
+        .container {
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        /* Logo Section */
+        .logo h1 {
+            color: #0073b1;
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .logo p {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        /* Auth Box */
+        .auth-box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        /* Input Fields */
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        /* Button */
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #0073b1;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background: #005f91;
+        }
+
+        /* Toggle Forms */
+        .hidden {
+            display: none;
+        }
+
+        /* Links */
+        p {
+            font-size: 14px;
+            color: #666;
+        }
+
+        p a {
+            color: #0073b1;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        p a:hover {
+            text-decoration: underline;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top: 4px solid #0073b1;
+            width: 30px;
+            height: 30px;
+            -webkit-animation: spin 1s linear infinite;
+            animation: spin 1s linear infinite;
+        }
+
+        @-webkit-keyframes spin {
+            0% { -webkit-transform: rotate(0deg); }
+            100% { -webkit-transform: rotate(360deg); }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Message Box */
+        .message {
+            display: none;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        .message.success {
+            color: green;
+        }
+
+        .message.error {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="logo">
+            <h1>TOPICO-Team Dashboard</h1>
+            <p>Connect, collaborate, and grow together.</p>
+        </div>
+
+        <div class="auth-box login-box">
+            <h2>Sign in</h2>
+            <form id="loginForm">
+                <input type="text" id="loginEmail" placeholder="Email or Username" required autocomplete="username">
+                <input type="password" id="loginPassword" placeholder="Password" required autocomplete="current-password">
+                <button type="submit">Sign in</button>
+            </form>
+            <p>New here? <a href="#" id="showSignUp">Join now</a></p>
+            <div class="spinner"></div>
+            <div class="message" id="loginMessage"></div>
+        </div>
+
+        <div class="auth-box signup-box hidden">
+            <h2>Join Team Dashboard</h2>
+            <form id="signupForm">
+                <input type="text" id="signupName" placeholder="Full Name" required autocomplete="name">
+                <input type="email" id="signupEmail" placeholder="Email" required autocomplete="email">
+                <input type="password" id="signupPassword" placeholder="Password" required autocomplete="new-password">
+                <button type="submit">Sign up</button>
+            </form>
+            <p>Already a member? <a href="#" id="showLogin">Sign in</a></p>
+            <div class="spinner"></div>
+            <div class="message" id="signupMessage"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-auth.js";
+        
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDW4P2bL0YsOQROY5gp5DY32TIf8JMajVs",
+            authDomain: "postlink-a7b74.firebaseapp.com",
+            databaseURL: "https://postlink-a7b74-default-rtdb.firebaseio.com",
+            projectId: "postlink-a7b74",
+            storageBucket: "postlink-a7b74.firebasestorage.app",
+            messagingSenderId: "520575766590",
+            appId: "1:520575766590:web:ce3fb62a7bc3241d12c16f",
+            measurementId: "G-X66P9GWS8J"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth();
+
+        // Show/Hide Forms
+        document.getElementById("showSignUp").addEventListener("click", function(event) {
+            event.preventDefault();
+            document.querySelector(".login-box").classList.add("hidden");
+            document.querySelector(".signup-box").classList.remove("hidden");
+        });
+
+        document.getElementById("showLogin").addEventListener("click", function(event) {
+            event.preventDefault();
+            document.querySelector(".signup-box").classList.add("hidden");
+            document.querySelector(".login-box").classList.remove("hidden");
+        });
+
+        // Sign Up
+        document.getElementById("signupForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            const email = document.getElementById("signupEmail").value;
+            const password = document.getElementById("signupPassword").value;
+            const spinner = document.querySelector(".signup-box .spinner");
+            const messageBox = document.getElementById("signupMessage");
+            spinner.style.display = "block";
+            messageBox.style.display = "none";
+            
+            createUserWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+                    localStorage.setItem('user', JSON.stringify(user));
+                    messageBox.textContent = "Sign up successful!";
+                    messageBox.className = "message success";
+                    messageBox.style.display = "block";
+                    spinner.style.display = "none";
+                    setTimeout(() => {
+                        window.location.href = 'home.html';
+                    }, 2000);
+                })
+                .catch((error) => {
+                    messageBox.textContent = error.message;
+                    messageBox.className = "message error";
+                    messageBox.style.display = "block";
+                    spinner.style.display = "none";
+                });
+        });
+
+        // Sign In
+        document.getElementById("loginForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            const email = document.getElementById("loginEmail").value;
+            const password = document.getElementById("loginPassword").value;
+            const spinner = document.querySelector(".login-box .spinner");
+            const messageBox = document.getElementById("loginMessage");
+            spinner.style.display = "block";
+            messageBox.style.display = "none";
+
+            signInWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+                    localStorage.setItem('user', JSON.stringify(user));
+                    messageBox.textContent = "Sign in successful!";
+                    messageBox.className = "message success";
+                    messageBox.style.display = "block";
+                    spinner.style.display = "none";
+                    setTimeout(() => {
+                        window.location.href = 'home.html';
+                    }, 2000);
+                })
+                .catch((error) => {
+                    messageBox.textContent = error.message;
+                    messageBox.className = "message error";
+                    messageBox.style.display = "block";
+                    spinner.style.display = "none";
+                });
+        });
+    </script>
+</body>
+</html>
