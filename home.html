@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Dashboard</title>
+    <style>
+        /* General Styles */
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f3f2ef;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #0073b1;
+            font-size: 22px;
+        }
+
+        .header .points {
+            font-weight: bold;
+            color: #0073b1;
+        }
+
+        /* Main Content */
+        .main {
+            display: flex;
+            flex: 1;
+            margin-top: 10px;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background: white;
+            padding: 20px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .sidebar ul li {
+            padding: 15px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            border-bottom: 1px solid #ddd;
+            transition: 0.3s;
+        }
+
+        .sidebar ul li:hover {
+            background: #e1f5fe;
+            color: #0073b1;
+        }
+
+        .sidebar ul li.active {
+            background: #0073b1;
+            color: white;
+        }
+
+        /* Content Area */
+        .content {
+            flex: 1;
+            padding: 20px;
+            background: white;
+            margin-left: 10px;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Form Styling */
+        input, textarea, button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        button {
+            background: #0073b1;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+        }
+
+        button:hover {
+            background: #005f91;
+        }
+
+        /* Image Upload */
+        #imagePreview {
+            max-width: 100%;
+            height: auto;
+            display: none;
+            margin-top: 10px;
+        }
+
+        /* Submission History */
+        .history-item {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 10px 0;
+            background: #fff;
+            border-radius: 5px;
+        }
+
+        .history-item img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 10px;
+            background: #f3f2ef;
+            font-size: 14px;
+            color: #666;
+            margin-top: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <div class="header">
+        <h1>Team Dashboard</h1>
+        <span class="points">0 Points</span>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main">
+        
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <ul>
+                <li class="tab active" data-target="submitSection">Submit</li>
+                <li class="tab" data-target="profileSection">Profile</li>
+                <li class="tab" data-target="historySection">History</li>
+            </ul>
+        </div>
+
+        <!-- Content Sections -->
+        <div class="content">
+            <div id="submitSection">
+                <h2>Submit Data</h2>
+                <form id="dataForm">
+                    <input type="text" id="titleInput" placeholder="Enter Title" required>
+                    <textarea id="descriptionInput" placeholder="Enter Content Description" required></textarea>
+                    <input type="file" id="imageInput" accept="image/*">
+                    <img id="imagePreview" alt="Image Preview">
+                    <button type="submit">Submit</button>
+                </form>
+            </div>
+
+            <div id="profileSection" class="hidden">
+                <h2>Your Profile</h2>
+                <p><strong>Name:</strong> John Doe</p>
+                <p><strong>Email:</strong> johndoe@example.com</p>
+                <p><strong>Total Points:</strong> <span class="profilePoints">0</span></p>
+            </div>
+
+            <div id="historySection" class="hidden">
+                <h2>Submission History</h2>
+                <div id="historyList">
+                    <p>No submissions yet.</p>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">Made by btem</div>
+
+    <script>
+        // Tab Switching Logic
+        const tabs = document.querySelectorAll(".tab");
+        const sections = document.querySelectorAll(".content > div");
+
+        tabs.forEach(tab => {
+            tab.addEventListener("click", () => {
+                tabs.forEach(t => t.classList.remove("active"));
+                tab.classList.add("active");
+
+                sections.forEach(section => section.classList.add("hidden"));
+                document.getElementById(tab.dataset.target).classList.remove("hidden");
+            });
+        });
+
+        // Image Preview
+        document.getElementById("imageInput").addEventListener("change", function(event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function() {
+                const img = document.getElementById("imagePreview");
+                img.src = reader.result;
+                img.style.display = "block";
+            };
+
+            if (file) {
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Submission Form Logic
+        document.getElementById("dataForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+
+            const title = document.getElementById("titleInput").value.trim();
+            const description = document.getElementById("descriptionInput").value.trim();
+            const image = document.getElementById("imagePreview").src;
+
+            if (title === "" || description === "") return;
+
+            const historyList = document.getElementById("historyList");
+            if (historyList.children[0].textContent === "No submissions yet.") {
+                historyList.innerHTML = "";
+            }
+
+            const newItem = document.createElement("div");
+            newItem.classList.add("history-item");
+            newItem.innerHTML = `<h3>${title}</h3><p>${description}</p>`;
+            if (image) {
+                newItem.innerHTML += `<img src="${image}" alt="Submitted Image">`;
+            }
+
+            historyList.appendChild(newItem);
+            document.getElementById("dataForm").reset();
+            document.getElementById("imagePreview").style.display = "none";
+
+            // Update Points
+            const pointsEl = document.querySelector(".points");
+            let currentPoints = parseInt(pointsEl.textContent);
+            pointsEl.textContent = `${currentPoints + 10} Points`;
+            document.querySelector(".profilePoints").textContent = `${currentPoints + 10}`;
+        });
+    </script>
+
+</body>
+</html>
