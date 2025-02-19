@@ -76,12 +76,37 @@
             color: white;
         }
 
+        .notification-dot {
+            width: 10px;
+            height: 10px;
+            background: blue;
+            border-radius: 50%;
+            margin-left: 10px;
+        }
+
         /* Content Area */
         .content {
             flex: 1;
+            display: flex;
+            justify-content: space-between;
             padding: 20px;
             background: white;
             margin-left: 10px;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .content-left {
+            flex: 1;
+        }
+
+        .content-right {
+            width: 200px;
+            text-align: center;
+        }
+
+        .content-right img {
+            max-width: 100%;
+            border-radius: 10px;
             box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
         }
 
@@ -110,28 +135,25 @@
             background: #005f91;
         }
 
-        /* Image Upload */
-        #imagePreview {
-            max-width: 100%;
-            height: auto;
-            display: none;
-            margin-top: 10px;
+        .edit-btn {
+            background: #ff9800;
         }
 
-        /* Submission History */
+        .edit-btn:hover {
+            background: #e68900;
+        }
+
+        /* History Item */
         .history-item {
-            border: 1px solid #ddd;
             padding: 10px;
+            border: 1px solid #ddd;
             margin: 10px 0;
-            background: #fff;
+            background: white;
             border-radius: 5px;
         }
 
-        .history-item img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 5px;
-            margin-top: 10px;
+        .history-item.unread {
+            border-left: 5px solid blue;
         }
 
         /* Footer */
@@ -162,12 +184,14 @@
                 <li class="tab active" data-target="submitSection">Submit</li>
                 <li class="tab" data-target="profileSection">Profile</li>
                 <li class="tab" data-target="historySection">History</li>
+                <li class="tab" data-target="requestSection">Request</li>
+                <li class="tab" data-target="messageSection">Message</li>
             </ul>
         </div>
 
         <!-- Content Sections -->
         <div class="content">
-            <div id="submitSection">
+            <div id="submitSection" class="content-left">
                 <h2>Submit Data</h2>
                 <form id="dataForm">
                     <input type="text" id="titleInput" placeholder="Enter Title" required>
@@ -178,18 +202,52 @@
                 </form>
             </div>
 
-            <div id="profileSection" class="hidden">
+            <div id="profileSection" class="hidden content-left">
                 <h2>Your Profile</h2>
-                <p><strong>Name:</strong> John Doe</p>
-                <p><strong>Email:</strong> johndoe@example.com</p>
+                <form id="profileForm">
+                    <p><strong>Email:</strong> <span id="profileEmail"></span></p>
+                    <p><strong>Username:</strong> <input type="text" id="profileUsername" readonly></p>
+                    <p><strong>Password:</strong> <input type="password" id="profilePassword" readonly></p>
+                    <button type="button" id="editProfileBtn" class="edit-btn">Edit</button>
+                    <button type="submit" id="saveProfileBtn" class="hidden">Save</button>
+                </form>
                 <p><strong>Total Points:</strong> <span class="profilePoints">0</span></p>
             </div>
 
-            <div id="historySection" class="hidden">
+            <div id="historySection" class="hidden content-left">
                 <h2>Submission History</h2>
                 <div id="historyList">
-                    <p>No submissions yet.</p>
+                    <p>Loading...</p>
                 </div>
+            </div>
+
+            <div id="requestSection" class="hidden content-left">
+                <h2>Request Data</h2>
+                <form id="requestForm">
+                    <input type="text" id="requestTitleInput" placeholder="Enter Request Title" required>
+                    <textarea id="requestDescriptionInput" placeholder="Enter Request Description" required></textarea>
+                    <button type="submit">Submit Request</button>
+                </form>
+                <div id="requestList">
+                    <p>Loading...</p>
+                </div>
+            </div>
+
+            <div id="messageSection" class="hidden content-left">
+                <h2>Messages</h2>
+                <form id="messageForm">
+                    <input type="email" id="recipientEmail" placeholder="Enter recipient's email" required>
+                    <textarea id="messageInput" placeholder="Enter your message" required></textarea>
+                    <button type="submit">Send Message</button>
+                </form>
+                <div id="messageList">
+                    <p>Loading...</p>
+                </div>
+            </div>
+
+            <!-- Right Side Images -->
+            <div class="content-right">
+                <img src="https://via.placeholder.com/200" alt="Placeholder Image">
             </div>
         </div>
         
@@ -198,10 +256,29 @@
     <!-- Footer -->
     <div class="footer">Made by btem</div>
 
-    <script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, addDoc, onSnapshot, query, where } from "https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "c18b1ad0fb217a178c390c32133b30c4",
+            authDomain: "postlink-a7b74.firebaseapp.com",
+            databaseURL: "https://postlink-a7b74-default-rtdb.firebaseio.com",
+            projectId: "postlink-a7b74",
+            storageBucket: "postlink-a7b74.firebasestorage.app",
+            messagingSenderId: "520575766590",
+            appId: "1:520575766590:web:ce3fb62a7bc3241d12c16f",
+            measurementId: "G-X66P9GWS8J"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
         // Tab Switching Logic
         const tabs = document.querySelectorAll(".tab");
-        const sections = document.querySelectorAll(".content > div");
+        const sections = document.querySelectorAll(".content-left");
 
         tabs.forEach(tab => {
             tab.addEventListener("click", () => {
@@ -230,26 +307,34 @@
         });
 
         // Submission Form Logic
-        document.getElementById("dataForm").addEventListener("submit", function(event) {
+        document.getElementById("dataForm").addEventListener("submit", async function(event) {
             event.preventDefault();
 
             const title = document.getElementById("titleInput").value.trim();
             const description = document.getElementById("descriptionInput").value.trim();
-            const image = document.getElementById("imagePreview").src;
+            const fileInput = document.getElementById("imageInput");
+            const file = fileInput.files[0];
 
-            if (title === "" || description === "") return;
+            if (title === "" || description === "" || !file) return;
+
+            // Upload Image to Imgbb
+            const formData = new FormData();
+            formData.append('image', file);
+            const response = await fetch(`https://api.imgbb.com/1/upload?key=c18b1ad0fb217a178c390c32133b30c4`, {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+            const imageUrl = result.data.url;
 
             const historyList = document.getElementById("historyList");
-            if (historyList.children[0].textContent === "No submissions yet.") {
+            if (historyList.children[0].textContent === "Loading...") {
                 historyList.innerHTML = "";
             }
 
             const newItem = document.createElement("div");
             newItem.classList.add("history-item");
-            newItem.innerHTML = `<h3>${title}</h3><p>${description}</p>`;
-            if (image) {
-                newItem.innerHTML += `<img src="${image}" alt="Submitted Image">`;
-            }
+            newItem.innerHTML = `<h3>${title}</h3><p>${description}</p><img src="${imageUrl}" alt="Submitted Image">`;
 
             historyList.appendChild(newItem);
             document.getElementById("dataForm").reset();
@@ -260,6 +345,182 @@
             let currentPoints = parseInt(pointsEl.textContent);
             pointsEl.textContent = `${currentPoints + 10} Points`;
             document.querySelector(".profilePoints").textContent = `${currentPoints + 10}`;
+        });
+
+        // Profile Form Logic
+        const profileForm = document.getElementById("profileForm");
+        const profileEmail = document.getElementById("profileEmail");
+        const profileUsername = document.getElementById("profileUsername");
+        const profilePassword = document.getElementById("profilePassword");
+        const editProfileBtn = document.getElementById("editProfileBtn");
+        const saveProfileBtn = document.getElementById("saveProfileBtn");
+
+        // Load user data from localStorage
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (user) {
+            profileEmail.textContent = user.email;
+            profileUsername.value = user.displayName || user.email;
+        }
+
+        editProfileBtn.addEventListener("click", () => {
+            profileUsername.removeAttribute("readonly");
+            profilePassword.removeAttribute("readonly");
+            editProfileBtn.classList.add("hidden");
+            saveProfileBtn.classList.remove("hidden");
+        });
+
+        profileForm.addEventListener("submit", (event) => {
+            event.preventDefault();
+            
+            // Save the updated username and password
+            profileUsername.setAttribute("readonly", true);
+            profilePassword.setAttribute("readonly", true);
+            editProfileBtn.classList.remove("hidden");
+            saveProfileBtn.classList.add("hidden");
+
+            // Update user information in localStorage or send to server
+            user.displayName = profileUsername.value;
+            // Note: Update the password in your auth system (Firebase, etc.) if necessary
+
+            localStorage.setItem('user', JSON.stringify(user));
+            alert('Profile updated successfully!');
+        });
+
+        // Fetch History from Firestore
+        async function fetchHistory() {
+            const historyList = document.getElementById("historyList");
+            const querySnapshot = await getDocs(collection(db, "History"));
+
+            historyList.innerHTML = "";
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                const historyItem = document.createElement("div");
+                historyItem.classList.add("history-item");
+                if (!data.read) {
+                    historyItem.classList.add("unread");
+                }
+                historyItem.innerHTML = `<h3>${data.title}</h3><p>${data.message}</p>`;
+                historyList.appendChild(historyItem);
+            });
+
+            if (historyList.innerHTML === "") {
+                historyList.innerHTML = "<p>No submissions yet.</p>";
+            }
+        }
+
+        // Fetch Requests from Firestore
+        async function fetchRequests() {
+            const requestList = document.getElementById("requestList");
+            const querySnapshot = await getDocs(collection(db, "Requests"));
+
+            requestList.innerHTML = "";
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                const requestItem = document.createElement("div");
+                requestItem.classList.add("history-item");
+                requestItem.innerHTML = `<h3>${data.title}</h3><p>${data.description}</p>`;
+                requestList.appendChild(requestItem);
+            });
+
+            if (requestList.innerHTML === "") {
+                requestList.innerHTML = "<p>No requests yet.</p>";
+            }
+        }
+
+        // Fetch Messages from Firestore
+        async function fetchMessages() {
+            const messageList = document.getElementById("messageList");
+            const querySnapshot = await getDocs(collection(db, "Messages"));
+
+            messageList.innerHTML = "";
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                const messageItem = document.createElement("div");
+                messageItem.classList.add("history-item");
+                if (!data.read) {
+                    messageItem.classList.add("unread");
+                }
+                messageItem.innerHTML = `<h3>${data.sender}</h3><p>${data.message}</p>`;
+                messageList.appendChild(messageItem);
+            });
+
+            if (messageList.innerHTML === "") {
+                messageList.innerHTML = "<p>No messages yet.</p>";
+            }
+        }
+
+        // Fetch history, requests, and messages on load
+        fetchHistory();
+        fetchRequests();
+        fetchMessages();
+
+        // Real-time updates for Messages
+        const messagesQuery = query(collection(db, "Messages"));
+        onSnapshot(messagesQuery, (snapshot) => {
+            fetchMessages();
+        });
+
+        // Real-time updates for Requests
+        const requestsQuery = query(collection(db, "Requests"));
+        onSnapshot(requestsQuery, (snapshot) => {
+            fetchRequests();
+        });
+
+        // Request Form Logic
+        document.getElementById("requestForm").addEventListener("submit", async function(event) {
+            event.preventDefault();
+
+            const title = document.getElementById("requestTitleInput").value.trim();
+            const description = document.getElementById("requestDescriptionInput").value.trim();
+
+            if (title === "" || description === "") return;
+
+            await addDoc(collection(db, "Requests"), {
+                title: title,
+                description: description,
+                timestamp: new Date()
+            });
+
+            alert(`Request Submitted:\nTitle: ${title}\nDescription: ${description}`);
+
+            document.getElementById("requestForm").reset();
+        });
+
+        // Message Form Logic
+        document.getElementById("messageForm").addEventListener("submit", async function(event) {
+            event.preventDefault();
+
+            const recipientEmail = document.getElementById("recipientEmail").value.trim();
+            const message = document.getElementById("messageInput").value.trim();
+
+            if (recipientEmail === "" || message === "") return;
+
+            const userQuery = query(collection(db, "Users"), where("email", "==", recipientEmail));
+            const querySnapshot = await getDocs(userQuery);
+
+            if (querySnapshot.empty) {
+                alert("Recipient not found.");
+                return;
+            }
+
+            const recipient = querySnapshot.docs[0].data();
+
+            await addDoc(collection(db, "Messages"), {
+                sender: user.email,
+                recipient: recipientEmail,
+                message: message,
+                read: false,
+                timestamp: new Date()
+            });
+
+            alert(`Message Sent to ${recipientEmail}`);
+
+            document.getElementById("messageForm").reset();
+        });
+
+        // Real-time updates for Messages
+        onSnapshot(collection(db, "Messages"), (snapshot) => {
+            fetchMessages();
         });
     </script>
 
